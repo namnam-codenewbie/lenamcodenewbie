@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Khung long nam</title>
+    <style>
+        body { text-align: center; background: #f7f7f7; }
+        canvas { border-bottom: 2px solid #535353; background: #fff; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="600" height="200"></canvas>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let gameSpeed = 3;
+        let isGameOver = false;
+
+        // Đối tượng Khủng long
+        const dino = {
+            x: 50, y: 150, w: 40, h: 40,
+            dy: 0, jumpForce: 16, gravity: 0.6, grounded: false
+        };
+
+        // Mảng chứa xương rồng
+        let obstacles = [];
+
+        function spawnObstacle() {
+            obstacles.push({ x: canvas.width, y: 160, w: 20, h: 20 });
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            // Xử lý nhảy
+            dino.dy += dino.gravity;
+            dino.y += dino.dy;
+
+            if (dino.y + dino.h > 190) {
+                dino.y = 190 - dino.h;
+                dino.dy = 0;
+                dino.grounded = true;
+            }
+
+            // Di chuyển chướng ngại vật
+            if (Math.random() < 0.01) spawnObstacle();
+
+            obstacles.forEach((obs, index) => {
+                obs.x -= gameSpeed;
+
+                // Kiểm tra va chạm
+                if (dino.x < obs.x + obs.w && dino.x + dino.w > obs.x &&
+                    dino.y < obs.y + obs.h && dino.y + dino.h > obs.y) {
+                    isGameOver = true;
+                    alert("Ngu vl! Điểm: " + Math.floor(score));
+                    location.reload(); 
+                }
+
+                if (obs.x + obs.w < 0) obstacles.splice(index, 1);
+            });
+
+            score += 0.1;
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ Dino (màu đen)
+            ctx.fillStyle = "#535353";
+            ctx.fillRect(dino.x, dino.y, dino.w, dino.h);
+
+            // Vẽ Xương rồng (màu đỏ cho dễ nhìn)
+            ctx.fillStyle = "#ff4d4d";
+            obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.w, obs.h));
+
+            // Vẽ Điểm
+            ctx.fillStyle = "#000";
+            ctx.fillText("Score: " + Math.floor(score), 540, 20);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && dino.grounded) {
+                dino.dy = -dino.jumpForce;
+                dino.grounded = false;
+            }
+        });
+
+        update();
+    </script>
+</body>
+</html>
